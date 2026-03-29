@@ -9,10 +9,10 @@ typedef enum {
   COMMAND_COUNT,
 } Command; 
 
-typedef int (*CommandFunc)(int argc, const char* argv[]);
+typedef int (*CommandFunc)(int argc, char* argv[]);
 
 extern const CommandFunc COMMAND_DISPATCH_TABLE[];
 
-Command parse_command(const int argc, const char* argv[]);
+Command parse_command(const int argc, char* argv[]);
 
 #endif

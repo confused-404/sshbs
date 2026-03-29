@@ -7,8 +7,10 @@ typedef struct {
   char* user;
   int port;
   int dry_run;
+  int force;
 } AddOptions;
 
-int add(const int argc, const char* argv[]);
+AddOptions parse_add_options(int argc, char* argv[]);
+int add(int argc, char* argv[]);
 
 #endif

@@ -7,7 +7,7 @@ const CommandFunc COMMAND_DISPATCH_TABLE[COMMAND_COUNT] = {
   [COMMAND_ADD] = add,
 };
 
-Command parse_command(const int argc, const char* argv[]) {
+Command parse_command(int argc, char* argv[]) {
   if (argc < 2) {
     return COMMAND_UNKNOWN;
   }
