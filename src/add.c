@@ -347,7 +347,7 @@ int add(int argc, char* argv[]) {
   AddOptions opts;
   if (parse_add_options(argc, argv, &opts) == PARSE_ERROR) {
     print_add_usage();
-    return 1;
+    return 2;
   }
 
   char path[512];
