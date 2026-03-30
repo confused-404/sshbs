@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -264,6 +265,37 @@ static ParseResult parse_port_value(const char* port_str, int* out_port) {
   return PARSE_OK;
 }
 
+static int char_is_allowed(const int ch, const char* extra_allowed) {
+  if (isalnum((unsigned char)ch) || ch == '.' || ch == '_' || ch == '-') {
+    return 1;
+  }
+
+  return extra_allowed && strchr(extra_allowed, ch) != NULL;
+}
+
+static ParseResult validate_safe_token(const char* label,
+                                       const char* value,
+                                       const char* extra_allowed) {
+  if (!value || value[0] == '\0') {
+    fprintf(stderr, "%s must not be empty\n", label);
+    return PARSE_ERROR;
+  }
+
+  for (size_t idx = 0; value[idx] != '\0'; idx++) {
+    const int ch = (unsigned char)value[idx];
+    if (!char_is_allowed(ch, extra_allowed)) {
+      fprintf(stderr,
+              "Invalid %s: %s (contains unsupported character '%c')\n",
+              label,
+              value,
+              value[idx]);
+      return PARSE_ERROR;
+    }
+  }
+
+  return PARSE_OK;
+}
+
 ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
   opts->alias = NULL;
   opts->host = NULL;
@@ -275,6 +307,9 @@ ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
   if (argc < 1) return PARSE_ERROR;
 
   opts->alias = argv[0];
+  if (validate_safe_token("alias", opts->alias, NULL) == PARSE_ERROR) {
+    return PARSE_ERROR;
+  }
 
   for (int argi = 1; argi < argc; argi++) {
     char* curr_arg = argv[argi];
@@ -332,6 +367,14 @@ ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
 
   if (!opts->user) {
     fprintf(stderr, "--user is required\n");
+    return PARSE_ERROR;
+  }
+
+  if (validate_safe_token("host", opts->host, ":[]") == PARSE_ERROR) {
+    return PARSE_ERROR;
+  }
+
+  if (validate_safe_token("user", opts->user, NULL) == PARSE_ERROR) {
     return PARSE_ERROR;
   }
 
