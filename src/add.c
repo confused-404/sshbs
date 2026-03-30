@@ -108,6 +108,7 @@ static int update_ssh_config(const AddOptions* opts, const char* home) {
   if (in) {
     char line[1024];
     int skipping_block = 0;
+    int malformed_block = 0;
 
     while (fgets(line, sizeof(line), in)) {
       if (!skipping_block && strcmp(line, begin_marker) == 0) {
@@ -129,7 +130,20 @@ static int update_ssh_config(const AddOptions* opts, const char* home) {
       }
     }
 
+    if (skipping_block) {
+      malformed_block = 1;
+    }
+
     fclose(in);
+
+    if (malformed_block) {
+      fprintf(stderr,
+              "Malformed managed SSH config block for alias %s: missing end marker\n",
+              opts->alias);
+      fclose(out);
+      unlink(tmp_path);
+      return 1;
+    }
   }
 
   if (fputc('\n', out) == EOF ||
