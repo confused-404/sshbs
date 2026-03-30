@@ -64,14 +64,62 @@ ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
     return PARSE_ERROR;
   } 
 
+  if (!opts->host) {
+    fprintf(stderr, "--host is required\n");
+    return PARSE_ERROR;
+  }
+
+  if (!opts->user) {
+    fprintf(stderr, "--user is required\n");
+    return PARSE_ERROR;
+  }
+
   return PARSE_OK;
 }
 
 int add(int argc, char* argv[]) {
   AddOptions opts;
-  ParseResult result = parse_add_options(argc, argv, &opts);
+  if (parse_add_options(argc, argv, &opts) == PARSE_ERROR) {
+    return 1;
+  }
 
-  if (result == PARSE_ERROR) return 1;
+  char target[256];
+  snprintf(target, sizeof(target), "%s@%s", opts.user, opts.host);
+
+  if (!opts.force) {
+    printf("Generating SSH key (if not exists)...\n");
+  }
+
+  if (!opts.dry_run) {
+    int ret = system("ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N \"\"");
+    if (ret != 0) {
+      fprintf(stderr, "Failed to generate SSH key\n");
+      return 1;
+    }
+  }
+
+  char cmd[512];
+  if (opts.port != 22) {
+    snprintf(cmd, sizeof(cmd),
+             "ssh-copy-id -p %d %s",
+             opts.port, target);
+  } else {
+    snprintf(cmd, sizeof(cmd),
+             "ssh-copy-id %s",
+             target);
+  }
+
+  printf("Running: %s\n", cmd);
+
+  if (!opts.dry_run) {
+    int ret = system(cmd);
+    if (ret != 0) {
+      fprintf(stderr, "Failed to copy SSH key\n");
+      return 1;
+    }
+  }
+
+  printf("SSH setup complete for %s\n", target);
 
   return 0;
 }
