@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
   opts->alias = NULL;
@@ -83,14 +84,28 @@ int add(int argc, char* argv[]) {
     return 1;
   }
 
+  char path[512];
+  const char* home = getenv("HOME");
+
+  if (!home) {
+    fprintf(stderr, "Could not get HOME directory\n");
+    return 1;
+  }
+
+  snprintf(path, sizeof(path), "%s/.ssh/id_ed25519", home);
+
   char target[256];
   snprintf(target, sizeof(target), "%s@%s", opts.user, opts.host);
 
   if (!opts.force) {
     printf("Generating SSH key (if not exists)...\n");
+  } else {
+    printf("Generating SSH key..");
   }
 
-  if (!opts.dry_run) {
+  int key_exists = access(path, F_OK) == 0;
+
+  if (!opts.dry_run && (opts.force || !key_exists)) {
     int ret = system("ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N \"\"");
     if (ret != 0) {
       fprintf(stderr, "Failed to generate SSH key\n");
