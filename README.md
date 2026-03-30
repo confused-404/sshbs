@@ -31,6 +31,35 @@ Binary output:
 ./bin/sshbs
 ```
 
+## Install
+
+Install into a directory that is on `PATH`.
+
+User-local install (no sudo):
+
+```sh
+mkdir -p ~/.local/bin
+install -m 0755 ./bin/sshbs ~/.local/bin/sshbs
+```
+
+If `~/.local/bin` is not already on `PATH`, add this to your shell profile (`~/.bashrc` or `~/.zshrc`):
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Then reload your shell:
+
+```sh
+source ~/.bashrc
+```
+
+System-wide install
+
+```sh
+sudo install -m 0755 ./bin/sshbs /usr/local/bin/sshbs
+```
+
 ## Usage
 
 ```sh
