@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -76,6 +77,21 @@ static int run_ssh_copy_id(const int port, const char* target) {
   return wait_for_child(pid);
 }
 
+static ParseResult parse_port_value(const char* port_str, int* out_port) {
+  char* end_ptr = NULL;
+  errno = 0;
+
+  long port_long = strtol(port_str, &end_ptr, 10);
+  if (end_ptr == port_str || *end_ptr != '\0' || errno != 0 ||
+      port_long < 1L || port_long > 65535L) {
+    fprintf(stderr, "Invalid port: %s (expected 1-65535)\n", port_str);
+    return PARSE_ERROR;
+  }
+
+  *out_port = (int)port_long;
+  return PARSE_OK;
+}
+
 ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
   opts->alias = NULL;
   opts->host = NULL;
@@ -116,7 +132,9 @@ ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
         fprintf(stderr, "Missing value for --port\n");
         return PARSE_ERROR;
       }
-      opts->port = atoi(argv[argi + 1]);
+      if (parse_port_value(argv[argi + 1], &opts->port) == PARSE_ERROR) {
+        return PARSE_ERROR;
+      }
       argi++;
       continue;
     }
