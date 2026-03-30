@@ -84,9 +84,9 @@ sshbs --help
 Examples:
 
 ```sh
-./bin/sshbs add app-prod --host 203.0.113.10 --user deploy
-./bin/sshbs add app-staging --host staging.example.com --user ubuntu --port 2222
-./bin/sshbs add app-dev --host dev.example.com --user yves --dry-run
+sshbs add app-prod --host 203.0.113.10 --user deploy
+sshbs add app-staging --host staging.example.com --user ubuntu --port 2222
+sshbs add app-dev --host dev.example.com --user bob --dry-run
 ```
 
 After success, your alias can be used directly:
