@@ -33,6 +33,6 @@ run: bin/$(TARGET)
 	./bin/$(TARGET)
 
 clean:
-	rm -f $(BUILD_DIR) bin/$(TARGET)
+	rm -rf $(BUILD_DIR) bin/$(TARGET)
 
 -include $(DEP)
