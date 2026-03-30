@@ -1,6 +1,7 @@
 # sshbs (SSH Bootstrap)
 
 Linux-only CLI to bootstrap SSH access on a new machine.
+I'm still pretty new to C so this code might be pretty bad.
 
 The `add` command will:
 - ensure `~/.ssh` exists
