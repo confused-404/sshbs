@@ -1,13 +1,16 @@
 #ifndef DISPATCH_H
 #define DISPATCH_H
 
-#include "add.h"
-
 typedef enum {
   COMMAND_UNKNOWN,
   COMMAND_ADD,
   COMMAND_COUNT,
 } Command; 
+
+typedef enum {
+  PARSE_OK,
+  PARSE_ERROR,
+} ParseResult;
 
 typedef int (*CommandFunc)(int argc, char* argv[]);
 
