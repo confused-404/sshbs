@@ -4,7 +4,77 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/wait.h>
 #include <unistd.h>
+
+static int wait_for_child(pid_t pid) {
+  int status = 0;
+  if (waitpid(pid, &status, 0) < 0) {
+    perror("waitpid");
+    return 1;
+  }
+
+  if (WIFEXITED(status)) {
+    return WEXITSTATUS(status);
+  }
+
+  return 1;
+}
+
+static int run_ssh_keygen(const char* key_path) {
+  pid_t pid = fork();
+  if (pid < 0) {
+    perror("fork");
+    return 1;
+  }
+
+  if (pid == 0) {
+    execlp("ssh-keygen",
+           "ssh-keygen",
+           "-t",
+           "ed25519",
+           "-f",
+           key_path,
+           "-N",
+           "",
+           (char*)NULL);
+    perror("ssh-keygen");
+    _exit(127);
+  }
+
+  return wait_for_child(pid);
+}
+
+static int run_ssh_copy_id(const int port, const char* target) {
+  pid_t pid = fork();
+  if (pid < 0) {
+    perror("fork");
+    return 1;
+  }
+
+  if (pid == 0) {
+    if (port != 22) {
+      char port_str[16];
+      snprintf(port_str, sizeof(port_str), "%d", port);
+      execlp("ssh-copy-id",
+             "ssh-copy-id",
+             "-p",
+             port_str,
+             target,
+             (char*)NULL);
+    } else {
+      execlp("ssh-copy-id",
+             "ssh-copy-id",
+             target,
+             (char*)NULL);
+    }
+
+    perror("ssh-copy-id");
+    _exit(127);
+  }
+
+  return wait_for_child(pid);
+}
 
 ParseResult parse_add_options(int argc, char* argv[], AddOptions* opts) {
   opts->alias = NULL;
@@ -106,28 +176,23 @@ int add(int argc, char* argv[]) {
   int key_exists = access(path, F_OK) == 0;
 
   if (!opts.dry_run && (opts.force || !key_exists)) {
-    int ret = system("ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N \"\"");
+    int ret = run_ssh_keygen(path);
     if (ret != 0) {
       fprintf(stderr, "Failed to generate SSH key\n");
       return 1;
     }
   }
 
-  char cmd[512];
   if (opts.port != 22) {
-    snprintf(cmd, sizeof(cmd),
-             "ssh-copy-id -p %d %s",
-             opts.port, target);
+    char port_str[16];
+    snprintf(port_str, sizeof(port_str), "%d", opts.port);
+    printf("Running: ssh-copy-id -p %s %s\n", port_str, target);
   } else {
-    snprintf(cmd, sizeof(cmd),
-             "ssh-copy-id %s",
-             target);
+    printf("Running: ssh-copy-id %s\n", target);
   }
 
-  printf("Running: %s\n", cmd);
-
   if (!opts.dry_run) {
-    int ret = system(cmd);
+    int ret = run_ssh_copy_id(opts.port, target);
     if (ret != 0) {
       fprintf(stderr, "Failed to copy SSH key\n");
       return 1;
