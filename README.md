@@ -35,11 +35,12 @@ Binary output:
 
 Install into a directory that is on `PATH`.
 
-User-local install (no sudo):
+Default install location is `/usr/local/bin`.
+
+User-local install:
 
 ```sh
-mkdir -p ~/.local/bin
-install -m 0755 ./bin/sshbs ~/.local/bin/sshbs
+make install PREFIX=$HOME/.local
 ```
 
 If `~/.local/bin` is not already on `PATH`, add this to your shell profile (`~/.bashrc` or `~/.zshrc`):
@@ -57,7 +58,19 @@ source ~/.bashrc
 System-wide install
 
 ```sh
-sudo install -m 0755 ./bin/sshbs /usr/local/bin/sshbs
+sudo make install
+```
+
+Uninstall:
+
+```sh
+sudo make uninstall
+```
+
+User-local uninstall:
+
+```sh
+make uninstall PREFIX=$HOME/.local
 ```
 
 ## Usage
