@@ -9,8 +9,10 @@ CFLAGS = -std=c99 -O2 -Wall -Wextra -Werror \
 LDFLAGS =
 
 TARGET = sshbs
+
+BUILD_DIR = build
 SRC = $(wildcard src/*.c)
-OBJ = $(SRC:.c=.o)
+OBJ = $(SRC:src/%.c=$(BUILD_DIR)/%.o)
 DEP = $(OBJ:.o=.d)
 
 all: bin/$(TARGET)
@@ -21,7 +23,8 @@ bin/$(TARGET): $(OBJ)
 	$(CC) $(OBJ) -o $@ $(LDFLAGS)
 	@echo "Build complete."
 
-src/%.o: src/%.c
+$(BUILD_DIR)/%.o: src/%.c
+	@mkdir -p $(BUILD_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: all run clean
@@ -30,6 +33,6 @@ run: bin/$(TARGET)
 	./bin/$(TARGET)
 
 clean:
-	rm -f src/*.o src/*.d bin/$(TARGET)
+	rm -f $(BUILD_DIR) bin/$(TARGET)
 
 -include $(DEP)
