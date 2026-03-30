@@ -1,4 +1,4 @@
-# sshbs
+# sshbs (SSH Bootstrap)
 
 Linux-only CLI to bootstrap SSH access on a new machine.
 
